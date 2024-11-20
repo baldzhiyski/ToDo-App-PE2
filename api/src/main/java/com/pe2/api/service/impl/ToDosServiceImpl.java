@@ -53,7 +53,14 @@ public class ToDosServiceImpl implements ToDosService {
     @Override
     public Optional<ToDosResponse> getToDoById(Long id) {
         return this.toDosRepository.findById(id)
-                .map(toDo -> mapper.map(toDo,ToDosResponse.class));
+                .map(toDo -> {
+                    List<AssigneeResponse> mappedAssignees = toDo.getAssigneeList().stream()
+                            .map(assignee -> mapper.map(assignee, AssigneeResponse.class))
+                            .toList();
+                    ToDosResponse mapped = mapper.map(toDo, ToDosResponse.class);
+                    mapped.setAssigneeResponseList(mappedAssignees);
+                    return mapped;
+                });
     }
 
     @Override
