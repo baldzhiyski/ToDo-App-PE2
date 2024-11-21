@@ -27,7 +27,8 @@ spring:
   datasource:
     driverClassName: org.mariadb.jdbc.Driver
     username: root
-    # Here I use a docker image without password needed
+    password: root
+
     url: jdbc:mariadb://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ToDoDB}?allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC
 logging:
   level:
