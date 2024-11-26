@@ -8,14 +8,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AssigneeRequest {
-    @Size(min = 5)
+public class AssigneeUpdateRequest {
+
+
     private String prename;
 
-    @Size(min = 5)
     private String name;
 
-    @NotBlank
-    @ValidEmail
     private String email;
 }

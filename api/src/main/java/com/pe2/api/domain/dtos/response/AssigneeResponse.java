@@ -15,4 +15,9 @@ public class AssigneeResponse {
     private String name;
 
     private String email;
+
+    private ToDoDetails toDoDetails;
+
+
+
 }

@@ -1,5 +1,6 @@
 package com.pe2.api.restController;
 
+import com.pe2.api.domain.dtos.request.AssigneeUpdateRequest;
 import com.pe2.api.domain.dtos.response.AssigneeResponse;
 import com.pe2.api.domain.dtos.request.AssigneeRequest;
 import com.pe2.api.service.AssigneeService;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/assignees")
+@RequestMapping("/api/assignees")
 public class AssigneeController {
 
     private AssigneeService assigneeService;
@@ -41,7 +42,7 @@ public class AssigneeController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<AssigneeResponse> updateAssignee(@PathVariable Long id, @RequestBody @Valid  AssigneeRequest assigneeUpdateRequest) {
+    public ResponseEntity<AssigneeResponse> updateAssignee(@PathVariable Long id, @RequestBody @Valid AssigneeUpdateRequest assigneeUpdateRequest) {
         AssigneeResponse response = assigneeService.updateAssignee(id,assigneeUpdateRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

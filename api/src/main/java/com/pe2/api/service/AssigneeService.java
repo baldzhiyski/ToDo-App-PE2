@@ -1,6 +1,7 @@
 package com.pe2.api.service;
 
 import com.pe2.api.domain.dtos.request.AssigneeRequest;
+import com.pe2.api.domain.dtos.request.AssigneeUpdateRequest;
 import com.pe2.api.domain.dtos.response.AssigneeResponse;
 import jakarta.validation.Valid;
 
@@ -14,7 +15,7 @@ public interface AssigneeService {
 
     AssigneeResponse saveAssignee(@Valid AssigneeRequest assignee);
 
-    AssigneeResponse updateAssignee(Long id, AssigneeRequest assigneeUpdateRequest);
+    AssigneeResponse updateAssignee(Long id, AssigneeUpdateRequest assigneeUpdateRequest);
 
     void deleteAssignee(Long id);
 }

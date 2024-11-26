@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/todos")
+@RequestMapping("/api/todos")
 public class ToDosController {
 
     private ToDosService toDosService;
@@ -23,12 +23,12 @@ public class ToDosController {
 
 
     @GetMapping
-    public ResponseEntity<List<ToDosResponse>> getAllTodos(){
+    public ResponseEntity<List<ToDosResponse>> getToDo(){
         return ResponseEntity.ok(toDosService.getAllToDosDto());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ToDosResponse> getAllTodos(@PathVariable Long id){
+    public ResponseEntity<ToDosResponse> getToDo(@PathVariable Long id){
         return toDosService.getToDoById(id)
                 .map(ResponseEntity::ok)
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
