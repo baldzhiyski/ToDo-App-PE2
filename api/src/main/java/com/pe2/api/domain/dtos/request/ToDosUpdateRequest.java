@@ -13,17 +13,15 @@ import java.util.ArrayList;
 @Setter
 public class ToDosUpdateRequest {
 
-    @NotBlank(message = "Title must not be empty.")
-    @Size(min = 1, message = "Title must have at least one character.")
+
     private String title;
 
     private String description;
 
     private ArrayList<Long> assigneeIdList;
 
-    @ValidUnixTimestamp
+
     private Long dueDate;
 
-    @NotNull
     private Boolean finished;
 }

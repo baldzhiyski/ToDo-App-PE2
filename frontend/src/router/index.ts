@@ -1,6 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import AssigneeView from "../views/AssigneeView.vue";
 import MainPage from "../views/MainPage.vue";
+import TodosView from "../views/TodosView.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -14,6 +15,11 @@ const router = createRouter({
             path: '/assignees',
             name: 'assignees',
             component: AssigneeView
+        },
+        {
+            path: '/todos',
+            name: 'todos',
+            component: TodosView
         }
 
     ]

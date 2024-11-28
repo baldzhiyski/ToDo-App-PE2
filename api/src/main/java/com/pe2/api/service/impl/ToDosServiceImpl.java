@@ -6,6 +6,7 @@ import com.pe2.api.domain.dtos.request.ToDosRequest;
 import com.pe2.api.domain.dtos.response.ToDosResponse;
 import com.pe2.api.domain.entity.Assignee;
 import com.pe2.api.domain.entity.ToDo;
+import com.pe2.api.exceptions.InvalidDueDateException;
 import com.pe2.api.exceptions.NoSuchAssigneeException;
 import com.pe2.api.exceptions.NoSuchToDoException;
 import com.pe2.api.repository.AssigneeRepository;
@@ -16,6 +17,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
+import java.time.Instant;
 import java.util.*;
 
 
@@ -114,22 +117,42 @@ public class ToDosServiceImpl implements ToDosService {
                 .orElseThrow(() -> new NoSuchToDoException(String.format(Constants.TODO_NOT_FOUND_MESSAGE, toDoId)));
 
         List<Assignee> assignees = new ArrayList<>();
-        toDo.setTitle(toDosRequest.getTitle());
-        toDo.setDescription(toDosRequest.getDescription());
-        if(toDosRequest.getDueDate() != null) {
-            toDo.setDueDate(new Date(toDosRequest.getDueDate()));
+        if(!toDosRequest.getTitle().isBlank()) {
+            toDo.setTitle(toDosRequest.getTitle());
+        }
+
+        if(!toDosRequest.getDescription().isBlank()) {
+            toDo.setDescription(toDosRequest.getDescription());
+        }
+        // Validate and set the dueDate
+        if (toDosRequest.getDueDate() != null) {
+            try {
+                Instant dueDateInstant = Instant.ofEpochMilli(toDosRequest.getDueDate());
+                Date dueDate = Date.from(dueDateInstant);
+
+                // Example: Optional check for dueDate not in the past
+                if (dueDate.before(new Date())) {
+                    throw new InvalidDueDateException("The due date cannot be in the past.");
+                }
+                toDo.setDueDate(dueDate);
+            } catch (DateTimeException | IllegalArgumentException e) {
+                throw new InvalidDueDateException("Invalid timestamp for due date.");
+            }
         }
         toDo.setFinished(toDosRequest.getFinished());
 
-        Set<Long> assigneeIdsList = new HashSet<>(toDosRequest.getAssigneeIdList());
+        if (toDosRequest.getAssigneeIdList() != null
+        && !toDosRequest.getAssigneeIdList().isEmpty()) {
+            Set<Long> assigneeIdsList = new HashSet<>(toDosRequest.getAssigneeIdList());
 
-        assigneeIdsList.forEach(id-> {
-            Assignee assignee = this.assigneeRepository.findById(id)
-                    .orElseThrow(() -> new NoSuchAssigneeException(String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE,id)));
-            assignee.setToDo(toDo);
-            assignees.add(assignee);
+            assigneeIdsList.forEach(id -> {
+                Assignee assignee = this.assigneeRepository.findById(id)
+                        .orElseThrow(() -> new NoSuchAssigneeException(String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE, id)));
+                assignee.setToDo(toDo);
+                assignees.add(assignee);
 
-        });
+            });
+        }
         return getToDosResponse(toDo, assignees);
     }
 

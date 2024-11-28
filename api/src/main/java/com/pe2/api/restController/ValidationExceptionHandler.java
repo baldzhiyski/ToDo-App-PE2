@@ -1,5 +1,6 @@
 package com.pe2.api.restController;
 
+import com.pe2.api.exceptions.InvalidDueDateException;
 import com.pe2.api.exceptions.InvalidEmailException;
 import com.pe2.api.exceptions.NoSuchAssigneeException;
 import com.pe2.api.exceptions.NoSuchToDoException;
@@ -48,17 +49,25 @@ public class ValidationExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(NoSuchAssigneeException.class)
-    public ResponseEntity<String> handleNoSuchAssigneeException(NoSuchAssigneeException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<Object> handleNoSuchAssigneeException(NoSuchAssigneeException ex) {
+        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 404);
+        return new ResponseEntity<>(httpErrorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(NoSuchToDoException.class)
-    public ResponseEntity<String> handleNoSuchToDoException(NoSuchToDoException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<Object> handleNoSuchToDoException(NoSuchToDoException ex) {
+        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
+        return new ResponseEntity<>(httpErrorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InvalidEmailException.class)
     public ResponseEntity<Object> handleNoSuchToDoException(InvalidEmailException ex) {
+        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
+        return new ResponseEntity<>(httpErrorResponse,HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidDueDateException.class)
+    public ResponseEntity<Object> handleInvalidDueDateException(InvalidDueDateException ex) {
         HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
         return new ResponseEntity<>(httpErrorResponse,HttpStatus.BAD_REQUEST);
     }
