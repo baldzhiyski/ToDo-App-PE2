@@ -367,6 +367,9 @@ export default {
     },
     filteredAndSortedToDos(isFinished) {
       return this.toDos
+          .filter(todo =>
+              todo.title.toLowerCase().includes(this.filters.title.toLowerCase())
+          )
           .filter(todo => todo.finished === isFinished)
           .sort((a, b) => {
             if (this.filters.sortBy === "title") {
