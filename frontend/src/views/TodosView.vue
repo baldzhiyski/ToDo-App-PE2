@@ -267,28 +267,48 @@
 
 
     <!-- Create Assign  Modal -->
+    <!-- Create Assign Modal -->
     <ModalComponent v-model:isVisible="isAssignModalVisible">
       <h3><i class="fas fa-user-plus"></i> Assign to the Task</h3>
       <form @submit.prevent="saveEdits">
         <div class="mb-3">
-          <label for="assigneeIdInput" class="form-label">Add Assignees</label>
-          <div class="input-group">
-            <input
-                type="number"
-                v-model="editDtoId"
-                class="form-control"
-                id="assigneeIdInput"
-                placeholder="Enter Assignee ID"
-            />
-            <button type="button" class="btn btn-outline-secondary" @click="addAssigneeIdUpdate">
-              Add
-            </button>
-          </div>
+          <label for="assigneeSelect" class="form-label">Add Assignees</label>
+          <select
+              id="assigneeSelect"
+              v-model="selectedAssignee"
+              class="form-select"
+          >
+            <option disabled value="">Select an assignee</option>
+            <option v-for="ass in assignees" :key="ass.id" :value="ass">
+              {{ ass.prename + " " + ass.name  }}
+            </option>
+          </select>
+          <button
+              type="button"
+              class="btn btn-outline-secondary mt-2"
+              @click="addAssignee"
+              :disabled="!selectedAssignee"
+          >
+            Add
+          </button>
         </div>
         <div class="mt-3">
           <h5>Current Assignees:</h5>
           <ul>
-            <li v-for="(id, index) in editToDo.assigneeIdList" :key="index">{{ id }}</li>
+            <li
+                v-for="(id, index) in editToDo.assigneeIdList"
+                :key="index"
+            >
+              {{ getUserNameById(id) }}
+              <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger ms-2 p-1"
+                  @click="removeAssignee(index)"
+                  title="Remove Assignee"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </li>
           </ul>
         </div>
         <div class="d-flex justify-content-end mt-3">
@@ -298,6 +318,7 @@
         </div>
       </form>
     </ModalComponent>
+
 
   </div>
 </template>
@@ -320,7 +341,7 @@ export default {
       },
       showFinished: true,
       selectedToDo: {},
-      selectedAssignee: [],
+      selectedAssignee: null,
       assignees: [],
       isCreateModalVisible: false,
       isEditModalVisible: false,
@@ -591,7 +612,23 @@ export default {
     },
     toggleFinishedVisibility() {
       this.showFinished = !this.showFinished;
-    }
+    },
+    addAssignee() {
+      if (
+          this.selectedAssignee &&
+          !this.editToDo.assigneeIdList.includes(this.selectedAssignee.id)
+      ) {
+        this.editToDo.assigneeIdList.push(this.selectedAssignee.id); // Push ID only
+        this.selectedAssignee = null; // Reset selection
+      }
+    },
+    removeAssignee(index) {
+      this.editToDo.assigneeIdList.splice(index, 1);
+    },
+    getUserNameById(id) {
+      const assignee = this.assignees.find((value) => value.id === id);
+      return assignee ?assignee.prename + " " +  assignee.name  : "Unknown User";
+    },
   }
 };
 </script>
