@@ -1,9 +1,12 @@
 package com.pe2.api.service.impl;
 
+import com.pe2.api.domain.dtos.request.AssigneeUpdateRequest;
 import com.pe2.api.domain.dtos.response.AssigneeResponse;
 import com.pe2.api.domain.dtos.request.AssigneeRequest;
+import com.pe2.api.domain.dtos.response.ToDoDetails;
 import com.pe2.api.domain.entity.Assignee;
 import com.pe2.api.domain.entity.ToDo;
+import com.pe2.api.exceptions.InvalidEmailException;
 import com.pe2.api.exceptions.NoSuchAssigneeException;
 import com.pe2.api.repository.AssigneeRepository;
 import com.pe2.api.repository.ToDosRepository;
@@ -39,7 +42,13 @@ public class AssigneeServiceImpl implements AssigneeService {
     @Override
     public Optional<AssigneeResponse> getAssigneeById(Long id) {
         return  this.assigneeRepository.findById(id)
-                .map(assignee -> this.mapper.map(assignee, AssigneeResponse.class));
+                .map(assignee -> {
+                    ToDoDetails mapped = this.mapper.map(assignee.getToDo(), ToDoDetails.class);
+                    AssigneeResponse assigneeResponse = this.mapper.map(assignee, AssigneeResponse.class);
+                    assigneeResponse.setToDoDetails(mapped);
+
+                    return assigneeResponse;
+                });
     }
 
     @Override
@@ -51,13 +60,25 @@ public class AssigneeServiceImpl implements AssigneeService {
     }
 
     @Override
-    public AssigneeResponse updateAssignee(Long id, AssigneeRequest assigneeUpdateRequest) {
+    public AssigneeResponse updateAssignee(Long id, AssigneeUpdateRequest assigneeUpdateRequest) {
         Assignee assignee = this.assigneeRepository.findById(id)
                 .orElseThrow(() -> new NoSuchAssigneeException("Assignee with id " + id + " not existing in the DB !"));
 
-        assignee.setName(assigneeUpdateRequest.getName());
-        assignee.setEmail(assigneeUpdateRequest.getEmail());
-        assignee.setPrename(assigneeUpdateRequest.getPrename());
+        if (this.assigneeRepository.existsByEmail(assigneeUpdateRequest.getEmail())) {
+            throw new InvalidEmailException("There is an existing user with the email : " + assigneeUpdateRequest.getEmail());
+        }
+        if(!assigneeUpdateRequest.getName().isBlank()) {
+            assignee.setName(assigneeUpdateRequest.getName());
+        }
+
+        if(!assigneeUpdateRequest.getEmail().isBlank()) {
+            assignee.setEmail(assigneeUpdateRequest.getEmail());
+        }
+
+        if(!assigneeUpdateRequest.getPrename().isBlank()) {
+            assignee.setPrename(assigneeUpdateRequest.getPrename());
+        }
+
         this.assigneeRepository.saveAndFlush(assignee);
 
         Assignee updatedAssignee = this.assigneeRepository.findById(id).get();
