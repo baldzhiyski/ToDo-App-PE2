@@ -9,7 +9,8 @@
     </div>
 
     <!-- Assignees List -->
-    <div class="row g-4">
+    <!-- Assignees List -->
+    <div class="row g-4" v-if="assignees.length">
       <div class="col-md-3" v-for="assignee in assignees" :key="assignee.id">
         <div class="card shadow-lg border-0 m-lg-1">
           <div class="card-body">
@@ -46,6 +47,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Error Message -->
+    <div v-else class="alert alert-danger text-center">
+      <i class="fas fa-database"></i> Failed to load assignees. Please check your database connection and try again.
+    </div>
+
+
 
     <!-- Assignee Details Modal -->
     <ModalComponent v-model:isVisible="isDetailsModalVisible" :assignee="selectedAssignee">
@@ -155,7 +163,14 @@ export default {
         const response = await apiClient.get('assignees');
         assignees.value = response;
       } catch (error) {
-        createToast("Error",error.message,faXmark, 10)
+        console
+        createToast( {
+          title: "Validation Errors",  // Toast title
+          message: "Failed to fetch",  // The concatenated error messages,
+          icon: faXmark,
+          type: "error",  // Toast type (error)
+          timeout: 5,  // Duration for the toast in seconds
+        })
       }
     };
 
