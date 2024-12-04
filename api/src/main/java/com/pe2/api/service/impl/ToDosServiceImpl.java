@@ -14,22 +14,21 @@ import com.pe2.api.repository.ToDosRepository;
 import com.pe2.api.service.ToDosService;
 import com.pe2.api.utils.Constants;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.time.DateTimeException;
-import java.time.Instant;
 import java.util.*;
-
+import java.util.stream.Collectors;
 
 @Service
 public class ToDosServiceImpl implements ToDosService {
 
-    private ToDosRepository toDosRepository;
-
-    private AssigneeRepository assigneeRepository;
-
-    private ModelMapper mapper;
+    private final ToDosRepository toDosRepository;
+    private final AssigneeRepository assigneeRepository;
+    private final ModelMapper mapper;
 
     public ToDosServiceImpl(ToDosRepository toDosRepository, AssigneeRepository assigneeRepository, ModelMapper mapper) {
         this.toDosRepository = toDosRepository;
@@ -39,120 +38,123 @@ public class ToDosServiceImpl implements ToDosService {
 
     @Override
     public List<ToDosResponse> getAllToDosDto() {
-        return this.toDosRepository.findAll()
-                .stream()
-                .map(toDo -> {
-                    ToDosResponse mapped = this.mapper.map(toDo, ToDosResponse.class);
-                    List<AssigneeResponse> mappedAssignees = toDo.getAssigneeList().stream()
-                            .map(assignee -> mapper.map(assignee, AssigneeResponse.class))
-                            .toList();
-                    mapped.setAssigneeResponseList(mappedAssignees);
+        List<ToDo> allToDos = this.toDosRepository.findAll();
 
+        return allToDos.stream()
+                .map(toDo -> {
+                    // Manually map fields from ToDo to ToDosResponse
+                    ToDosResponse mapped = new ToDosResponse();
+                    mapped.setId(toDo.getId());
+                    mapped.setTitle(toDo.getTitle());
+                    mapped.setFinished(toDo.isFinished());
+                    mapped.setDescription(toDo.getDescription());
+                    mapped.setCreatedDate(toDo.getCreatedDate() != null ? toDo.getCreatedDate().getTime() : null);
+                    mapped.setDueDate(toDo.getDueDate() != null ? toDo.getDueDate().getTime() : null);
+                    mapped.setFinishedDate(toDo.getFinishedDate() != null ? toDo.getFinishedDate().getTime() : null);
+
+                    // Map assignees manually
+                    List<AssigneeResponse> mappedAssignees = toDo.getAssigneeList().stream()
+                            .map(assignee -> {
+                                AssigneeResponse assigneeResponse = new AssigneeResponse();
+                                assigneeResponse.setId(assignee.getId());
+                                assigneeResponse.setName(assignee.getName());
+                                assigneeResponse.setEmail(assignee.getEmail());
+                                assigneeResponse.setPrename(assignee.getPrename() != null ? assignee.getPrename() : ""); // Default to empty string
+                                return assigneeResponse;
+                            })
+                            .collect(Collectors.toList());
+
+                    mapped.setAssigneeList(mappedAssignees);
                     return mapped;
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<ToDosResponse> getToDoById(Long id) {
-        return this.toDosRepository.findById(id)
-                .map(toDo -> {
-                    List<AssigneeResponse> mappedAssignees = toDo.getAssigneeList().stream()
-                            .map(assignee -> mapper.map(assignee, AssigneeResponse.class))
-                            .toList();
-                    ToDosResponse mapped = mapper.map(toDo, ToDosResponse.class);
-                    mapped.setAssigneeResponseList(mappedAssignees);
-                    return mapped;
-                });
+    public ToDosResponse getToDoById(Long id) {
+        ToDo toDo = this.toDosRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatusCode.valueOf(404), "No such ToDo with id " + id));
+        return getToDosResponse(toDo, toDo.getAssigneeList());
     }
 
     @Override
-    @Transactional
     public ToDosResponse createToDo(ToDosRequest toDosRequest) {
         ToDo mapped = new ToDo();
         mapped.setDescription(toDosRequest.getDescription());
         mapped.setTitle(toDosRequest.getTitle());
-        if(toDosRequest.getDueDate() != null) {
-            mapped.setDueDate(new Date(toDosRequest.getDueDate()));
+
+        // Convert the dueDate (timestamp) to Date
+        if (toDosRequest.getDueDate() != null) {
+            try {
+                long timestamp = Long.parseLong(toDosRequest.getDueDate());  // Now it's a long, no need to parse
+                mapped.setDueDate(new Date(timestamp));  // Set the dueDate as a Date object
+            } catch (NumberFormatException e) {
+                throw new InvalidDueDateException("Invalid date format : " + toDosRequest.getDueDate());
+            }
         }
-        mapped.setCreatedDate(new Date());
+
+        mapped.setCreatedDate(new Date()); // Set the current date as created date
 
         List<Assignee> assignees = new ArrayList<>();
-        // Assignee Validation
         if (toDosRequest.getAssigneeIdList() != null && !toDosRequest.getAssigneeIdList().isEmpty()) {
-            // Ensure all assignee IDs are unique
             Set<Long> assigneeIdSet = new HashSet<>(toDosRequest.getAssigneeIdList());
 
-
-            // Validate each assignee exists in the DB
             assigneeIdSet.forEach(id -> {
                 Assignee assignee = this.assigneeRepository.findById(id)
-                        .orElseThrow(() -> new NoSuchAssigneeException(String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE,id)));
+                        .orElseThrow(() -> new NoSuchAssigneeException(String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE, id)));
                 assignee.setToDo(mapped);
                 assignees.add(assignee);
             });
         }
         return getToDosResponse(mapped, assignees);
-
     }
 
     @Override
     @Transactional
-    public void deleteToDo(Long todoId) {
-        ToDo toDoToBeDeleted = this.toDosRepository.findById(todoId)
-                .orElseThrow(() -> new NoSuchToDoException(String.format(Constants.TODO_NOT_FOUND_MESSAGE, todoId)));
-
-        toDoToBeDeleted.getAssigneeList()
-                .forEach(assignee -> {
-                    assignee.setToDo(null);
-                });
-
-        this.toDosRepository.delete(toDoToBeDeleted);
+    public Optional<ToDo> deleteToDo(Long todoId) {
+        return this.toDosRepository.findById(todoId);
     }
 
     @Override
     @Transactional
     public ToDosResponse updateExistingToDo(Long toDoId, ToDosUpdateRequest toDosRequest) {
         ToDo toDo = this.toDosRepository.findById(toDoId)
-                .orElseThrow(() -> new NoSuchToDoException(String.format(Constants.TODO_NOT_FOUND_MESSAGE, toDoId)));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.valueOf(404),String.format(Constants.TODO_NOT_FOUND_MESSAGE, toDoId)));
 
         List<Assignee> assignees = new ArrayList<>();
-        if(!toDosRequest.getTitle().isBlank()) {
+        if (!toDosRequest.getTitle().isBlank()) {
             toDo.setTitle(toDosRequest.getTitle());
         }
 
-        if(!toDosRequest.getDescription().isBlank()) {
+        if (!toDosRequest.getDescription().isBlank()) {
             toDo.setDescription(toDosRequest.getDescription());
         }
-        // Validate and set the dueDate
-        if (toDosRequest.getDueDate() != null) {
-            try {
-                Instant dueDateInstant = Instant.ofEpochMilli(toDosRequest.getDueDate());
-                Date dueDate = Date.from(dueDateInstant);
 
-                // Example: Optional check for dueDate not in the past
-                if (dueDate.before(new Date())) {
-                    throw new InvalidDueDateException("The due date cannot be in the past.");
-                }
-                toDo.setDueDate(dueDate);
-            } catch (DateTimeException | IllegalArgumentException e) {
-                throw new InvalidDueDateException("Invalid timestamp for due date.");
+        // Convert dueDate from String to Long (timestamp)
+        if (toDosRequest.getDueDate() != null && !toDosRequest.getDueDate().isBlank()) {
+            Date dueDate = new Date(Long.parseLong(toDosRequest.getDueDate()));
+
+            if (dueDate.before(new Date())) {
+                throw new InvalidDueDateException("The due date cannot be in the past.");
             }
+
+            toDo.setDueDate(dueDate);
         }
+
         toDo.setFinished(toDosRequest.getFinished());
 
-        if (toDosRequest.getAssigneeIdList() != null
-        && !toDosRequest.getAssigneeIdList().isEmpty()) {
+        if (toDosRequest.getAssigneeIdList() != null && !toDosRequest.getAssigneeIdList().isEmpty()) {
             Set<Long> assigneeIdsList = new HashSet<>(toDosRequest.getAssigneeIdList());
+
 
             assigneeIdsList.forEach(id -> {
                 Assignee assignee = this.assigneeRepository.findById(id)
                         .orElseThrow(() -> new NoSuchAssigneeException(String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE, id)));
                 assignee.setToDo(toDo);
                 assignees.add(assignee);
-
             });
         }
+
         return getToDosResponse(toDo, assignees);
     }
 
@@ -160,14 +162,27 @@ public class ToDosServiceImpl implements ToDosService {
         toDo.setAssigneeList(assignees);
         this.toDosRepository.saveAndFlush(toDo);
 
-        ToDosResponse mappedResponse = this.mapper.map(toDo, ToDosResponse.class);
-        List<AssigneeResponse> mappedAssignees = toDo.getAssigneeList().stream()
-                .map(assignee -> mapper.map(assignee, AssigneeResponse.class))
-                .toList();
-        mappedResponse.setAssigneeResponseList(mappedAssignees);
+        ToDosResponse mappedResponse = new ToDosResponse();
+        mappedResponse.setDescription(toDo.getDescription());
+        mappedResponse.setTitle(toDo.getTitle());
+        mappedResponse.setId(toDo.getId());
+        mappedResponse.setDueDate(toDo.getDueDate().getTime());
+        mappedResponse.setFinished(toDo.isFinished());
+        mappedResponse.setCreatedDate(toDo.getCreatedDate() != null ? toDo.getCreatedDate().getTime() : null);
+        mappedResponse.setFinishedDate(toDo.getFinishedDate() != null ? toDo.getFinishedDate().getTime() : null);
 
+        List<AssigneeResponse> mappedAssignees = toDo.getAssigneeList().stream()
+                .map(assignee -> {
+                    AssigneeResponse assigneeResponse = new AssigneeResponse();
+                    assigneeResponse.setId(assignee.getId());
+                    assigneeResponse.setPrename(assignee.getPrename() != null ? assignee.getPrename() : ""); // Ensure prename is set
+                    assigneeResponse.setEmail(assignee.getEmail());
+                    assigneeResponse.setName(assignee.getName());
+                    return assigneeResponse;
+                })
+                .collect(Collectors.toList());
+
+        mappedResponse.setAssigneeList(mappedAssignees);
         return mappedResponse;
     }
-
-
 }

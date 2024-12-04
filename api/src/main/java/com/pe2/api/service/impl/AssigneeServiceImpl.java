@@ -15,7 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,20 +33,22 @@ public class AssigneeServiceImpl implements AssigneeService {
     }
 
     @Override
-    public List<AssigneeResponse> getAllAssignees() {
+    public ArrayList<AssigneeResponse> getAllAssignees() {
         return this.assigneeRepository.findAll()
-                .stream().map(assignee -> this.mapper.map(assignee, AssigneeResponse.class))
-                .collect(Collectors.toList());
+                .stream()
+                .map(assignee -> this.mapper.map(assignee, AssigneeResponse.class))
+                .collect(Collectors.toCollection(ArrayList::new)); // Collect into an ArrayList
     }
 
     @Override
     public Optional<AssigneeResponse> getAssigneeById(Long id) {
         return  this.assigneeRepository.findById(id)
                 .map(assignee -> {
-                    ToDoDetails mapped = this.mapper.map(assignee.getToDo(), ToDoDetails.class);
                     AssigneeResponse assigneeResponse = this.mapper.map(assignee, AssigneeResponse.class);
-                    assigneeResponse.setToDoDetails(mapped);
-
+                    if(assignee.getToDo()!=null) {
+                        ToDoDetails mapped = this.mapper.map(assignee.getToDo(), ToDoDetails.class);
+                        assigneeResponse.setToDoDetails(mapped);
+                    }
                     return assigneeResponse;
                 });
     }

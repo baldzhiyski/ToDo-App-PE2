@@ -5,11 +5,11 @@ import com.pe2.api.domain.dtos.request.AssigneeUpdateRequest;
 import com.pe2.api.domain.dtos.response.AssigneeResponse;
 import jakarta.validation.Valid;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 
 public interface AssigneeService {
-    List<AssigneeResponse> getAllAssignees();
+    ArrayList<AssigneeResponse> getAllAssignees();
 
     Optional<AssigneeResponse> getAssigneeById(Long id);
 

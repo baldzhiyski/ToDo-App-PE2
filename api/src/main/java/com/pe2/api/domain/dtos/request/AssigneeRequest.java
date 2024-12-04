@@ -9,10 +9,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AssigneeRequest {
-    @Size(min = 5)
+    @Size(min = 1)
     private String prename;
 
-    @Size(min = 5)
+    @Size(min = 1)
     private String name;
 
     @NotBlank

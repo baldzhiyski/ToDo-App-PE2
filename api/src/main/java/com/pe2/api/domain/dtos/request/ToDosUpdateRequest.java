@@ -21,7 +21,7 @@ public class ToDosUpdateRequest {
     private ArrayList<Long> assigneeIdList;
 
 
-    private Long dueDate;
+    private String  dueDate;
 
     private Boolean finished;
 }

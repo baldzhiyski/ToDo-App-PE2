@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.ArrayList;
@@ -48,16 +49,27 @@ public class ValidationExceptionHandler extends ResponseEntityExceptionHandler {
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<String> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        // Customize the response for invalid 'id' values
+        if ("id".equals(ex.getName())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Resource not found for the given ID.");
+        }
+        // For other type mismatches, you could return a generic 400 if needed
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Invalid parameter: " + ex.getName());
+    }
     @ExceptionHandler(NoSuchAssigneeException.class)
     public ResponseEntity<Object> handleNoSuchAssigneeException(NoSuchAssigneeException ex) {
-        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 404);
-        return new ResponseEntity<>(httpErrorResponse, HttpStatus.NOT_FOUND);
+        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
+        return new ResponseEntity<>(httpErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoSuchToDoException.class)
     public ResponseEntity<Object> handleNoSuchToDoException(NoSuchToDoException ex) {
         HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
-        return new ResponseEntity<>(httpErrorResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(httpErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidEmailException.class)

@@ -15,7 +15,9 @@ public class ToDosResponse {
 
     private boolean finished;
 
-    private List<AssigneeResponse> assigneeResponseList;
+    private String description;
+
+    private List<AssigneeResponse> assigneeList;
 
     private Long createdDate;
     private Long dueDate;

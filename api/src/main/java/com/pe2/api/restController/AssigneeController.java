@@ -3,13 +3,19 @@ package com.pe2.api.restController;
 import com.pe2.api.domain.dtos.request.AssigneeUpdateRequest;
 import com.pe2.api.domain.dtos.response.AssigneeResponse;
 import com.pe2.api.domain.dtos.request.AssigneeRequest;
+import com.pe2.api.domain.entity.Assignee;
 import com.pe2.api.service.AssigneeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/assignees")
@@ -23,26 +29,29 @@ public class AssigneeController {
 
 
     @GetMapping
-    public ResponseEntity<List<AssigneeResponse>> getAssignees(){
-        return ResponseEntity.ok(assigneeService.getAllAssignees());
+    public List<AssigneeResponse> getAssignees() {
+        // Fetch the list of assignees
+
+        // Return the list directly (no need to wrap in a Map)
+        return assigneeService.getAllAssignees();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AssigneeResponse> getAssigneeById(@PathVariable Long id) {
+    public AssigneeResponse getAssigneeById(@PathVariable Long id) {
         return assigneeService.getAssigneeById(id)
-                .map(ResponseEntity::ok)
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignee not found"));
     }
 
+
     @PostMapping
-    public ResponseEntity<AssigneeResponse> createAssignee( @RequestBody  @Valid AssigneeRequest assignee) {
-        AssigneeResponse response = assigneeService.saveAssignee(assignee);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public AssigneeResponse createAssignee( @RequestBody  @Valid AssigneeRequest assignee) {
+        return assigneeService.saveAssignee(assignee);
     }
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<AssigneeResponse> updateAssignee(@PathVariable Long id, @RequestBody @Valid AssigneeUpdateRequest assigneeUpdateRequest) {
+    public ResponseEntity<AssigneeResponse> updateAssignee(@PathVariable Long id, @RequestBody  AssigneeUpdateRequest assigneeUpdateRequest) {
         AssigneeResponse response = assigneeService.updateAssignee(id,assigneeUpdateRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -50,6 +59,6 @@ public class AssigneeController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAssignee(@PathVariable Long id){
         assigneeService.deleteAssignee(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);  // If deleted successfully
+        return new ResponseEntity<>(HttpStatus.OK);  // If deleted successfully
     }
 }

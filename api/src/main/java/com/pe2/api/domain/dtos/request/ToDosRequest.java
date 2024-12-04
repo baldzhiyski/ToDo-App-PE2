@@ -24,7 +24,6 @@ public class ToDosRequest {
 
     private ArrayList<Long> assigneeIdList;
 
-    @ValidUnixTimestamp
-    private Long dueDate;
+    private String dueDate;
 
 }

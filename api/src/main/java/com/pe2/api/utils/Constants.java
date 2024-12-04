@@ -3,7 +3,8 @@ package com.pe2.api.utils;
 public enum Constants {
     ;
 
-    public static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@uni-stuttgart\\.de$";
+    public static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.uni-stuttgart\\.de$";
+
 
     public static final String TODO_NOT_FOUND_MESSAGE = "ToDo with id %d not in the DB!";
 
