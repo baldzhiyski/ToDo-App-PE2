@@ -1,14 +1,12 @@
 import { ref, type Ref } from "vue";
-import type { IconDefinition } from "@fortawesome/free-solid-svg-icons";
-import { faInfo } from "@fortawesome/free-solid-svg-icons";
+import { faInfo, faCheckCircle, faExclamationCircle, faTimesCircle, faBan } from "@fortawesome/free-solid-svg-icons";
 
 type ToastType = "info" | "success" | "error" | "warning" | "dark";
-
 
 export class AppToast {
     title: string;
     message: string;
-    icon: IconDefinition;
+    icon: any;
     type: ToastType;
     expired = false;
     key = Math.random();
@@ -23,7 +21,7 @@ export class AppToast {
         title: string;
         message: string;
         type?: ToastType;
-        icon?: IconDefinition;
+        icon?: any;
         timeout?: number;
     }) {
         this.title = title;
@@ -56,7 +54,7 @@ export function createToast({
     title: string;
     message: string;
     type?: ToastType;
-    icon?: IconDefinition;
+    icon?: any;
     timeout?: number;
 }) {
     const toast = new AppToast({ title, message, type, icon, timeout });

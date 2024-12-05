@@ -7,8 +7,6 @@ import com.pe2.api.domain.dtos.response.ToDosResponse;
 import com.pe2.api.domain.entity.Assignee;
 import com.pe2.api.domain.entity.ToDo;
 import com.pe2.api.exceptions.InvalidDueDateException;
-import com.pe2.api.exceptions.NoSuchAssigneeException;
-import com.pe2.api.exceptions.NoSuchToDoException;
 import com.pe2.api.repository.AssigneeRepository;
 import com.pe2.api.repository.ToDosRepository;
 import com.pe2.api.service.ToDosService;
@@ -97,14 +95,7 @@ public class ToDosServiceImpl implements ToDosService {
 
         List<Assignee> assignees = new ArrayList<>();
         if (toDosRequest.getAssigneeIdList() != null && !toDosRequest.getAssigneeIdList().isEmpty()) {
-            Set<Long> assigneeIdSet = new HashSet<>(toDosRequest.getAssigneeIdList());
-
-            assigneeIdSet.forEach(id -> {
-                Assignee assignee = this.assigneeRepository.findById(id)
-                        .orElseThrow(() -> new NoSuchAssigneeException(String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE, id)));
-                assignee.setToDo(mapped);
-                assignees.add(assignee);
-            });
+            validateAssigneesExist(mapped, assignees, toDosRequest.getAssigneeIdList());
         }
         return getToDosResponse(mapped, assignees);
     }
@@ -144,15 +135,10 @@ public class ToDosServiceImpl implements ToDosService {
         toDo.setFinished(toDosRequest.getFinished());
 
         if (toDosRequest.getAssigneeIdList() != null && !toDosRequest.getAssigneeIdList().isEmpty()) {
-            Set<Long> assigneeIdsList = new HashSet<>(toDosRequest.getAssigneeIdList());
-
-
-            assigneeIdsList.forEach(id -> {
-                Assignee assignee = this.assigneeRepository.findById(id)
-                        .orElseThrow(() -> new NoSuchAssigneeException(String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE, id)));
-                assignee.setToDo(toDo);
-                assignees.add(assignee);
-            });
+            // Detach all current assignees
+            toDo.getAssigneeList().forEach(assignee -> assignee.setToDo(null));
+            toDo.getAssigneeList().clear();
+            validateAssigneesExist(toDo, assignees, toDosRequest.getAssigneeIdList());
         }
 
         return getToDosResponse(toDo, assignees);
@@ -178,6 +164,7 @@ public class ToDosServiceImpl implements ToDosService {
                     assigneeResponse.setPrename(assignee.getPrename() != null ? assignee.getPrename() : ""); // Ensure prename is set
                     assigneeResponse.setEmail(assignee.getEmail());
                     assigneeResponse.setName(assignee.getName());
+                    assigneeResponse.setId(assignee.getId());
                     return assigneeResponse;
                 })
                 .collect(Collectors.toList());
@@ -185,4 +172,16 @@ public class ToDosServiceImpl implements ToDosService {
         mappedResponse.setAssigneeList(mappedAssignees);
         return mappedResponse;
     }
+
+    private void validateAssigneesExist(ToDo mapped, List<Assignee> assignees, ArrayList<Long> assigneeIdList) {
+        Set<Long> assigneeIdSet = new HashSet<>(assigneeIdList);
+
+        assigneeIdSet.forEach(id -> {
+            Assignee assignee = this.assigneeRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatusCode.valueOf(400),String.format(Constants.ASSIGNEE_NOT_FOUND_MESSAGE, id)));
+            assignee.setToDo(mapped);
+            assignees.add(assignee);
+        });
+    }
+
 }

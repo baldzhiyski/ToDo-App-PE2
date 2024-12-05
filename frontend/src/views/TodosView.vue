@@ -54,8 +54,8 @@
               </p>
               <p class="mb-0">
                 <i class="fas fa-users"></i> Assignees:
-                <span v-if="todo.assigneeResponseList && todo.assigneeResponseList.length">
-                  {{ todo.assigneeResponseList.map(a => a.prename + " " + a.name).join(", ") }}
+                <span v-if="todo.assigneeList && todo.assigneeList.length">
+                  {{ todo.assigneeList.map(a => a.prename + " " + a.name).join(", ") }}
                 </span>
                 <span v-else>None</span>
               </p>
@@ -369,6 +369,7 @@ export default {
   methods: {
     async fetchToDos() {
       try {
+
         const response = await apiClient.get('todos');
         this.toDos = response;
       } catch (error) {
@@ -558,7 +559,7 @@ export default {
           this.editToDo.dueDate = new Date(this.editToDo.dueDate).getTime();
         }
         await apiClient.put(`todos/${this.editToDo.id}`, this.editToDo);
-        const successMessage = "Successfully edited todo !"
+        const successMessage = "You have successfully edited the chosen todo !"
         this.editToDo={
           title: "",
               dueDate: "",
@@ -568,7 +569,7 @@ export default {
         };
         createToast({
           title: "Successfully  edited  todo !",  // Toast title
-          message: "",  // The concatenated error messages,
+          message: successMessage,  // The concatenated error messages,
           icon: faInfo,
           type: "success",  // Toast type (error)
           timeout: 5,  // Duration for the toast in seconds

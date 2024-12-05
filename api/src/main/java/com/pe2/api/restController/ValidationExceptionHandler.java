@@ -62,18 +62,18 @@ public class ValidationExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(NoSuchAssigneeException.class)
     public ResponseEntity<Object> handleNoSuchAssigneeException(NoSuchAssigneeException ex) {
-        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
-        return new ResponseEntity<>(httpErrorResponse, HttpStatus.BAD_REQUEST);
+        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 404);
+        return new ResponseEntity<>(httpErrorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(NoSuchToDoException.class)
     public ResponseEntity<Object> handleNoSuchToDoException(NoSuchToDoException ex) {
-        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
-        return new ResponseEntity<>(httpErrorResponse, HttpStatus.BAD_REQUEST);
+        HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 404);
+        return new ResponseEntity<>(httpErrorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InvalidEmailException.class)
-    public ResponseEntity<Object> handleNoSuchToDoException(InvalidEmailException ex) {
+    public ResponseEntity<Object> handleInvalidEmailException(InvalidEmailException ex) {
         HttpErrorResponse httpErrorResponse = HttpErrorResponse.of(ex.getMessage(), 400);
         return new ResponseEntity<>(httpErrorResponse,HttpStatus.BAD_REQUEST);
     }

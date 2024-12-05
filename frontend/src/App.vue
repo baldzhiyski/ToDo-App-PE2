@@ -28,6 +28,22 @@ import Footer from "./components/Footer.vue";
 //     timeout: 3,
 //   });
 // };
+function toastClass({type}: { type: any }) {
+  switch (type) {
+    case 'success':
+      return 'alert-success'; // Green
+    case 'error':
+      return 'alert-danger'; // Red
+    case 'warning':
+      return 'alert-warning'; // Yellow
+    case 'info':
+      return 'alert-info'; // Blue
+    case 'dark':
+      return 'alert-dark'; // Dark Gray
+    default:
+      return '';
+  }
+}
 </script>
 
 <template>
@@ -43,24 +59,20 @@ import Footer from "./components/Footer.vue";
 
   </div>
 
-  <!-- Toasts Display -->
   <Toasts vertical-position="top" horizontal-position="end" class="custom-toast-container">
     <template v-for="toast of activeToasts" :key="toast.key">
-      <Toast :type="toast.type" class="alert alert-border-left alert-info">
-        <div class="flex-fill flex flex-column">
-          <div class="flex">
-            <h3 class="flex-fill">{{ toast.title }}</h3>
-            <Close @click="toast.close()"/>
-          </div>
-          <div class="flex">
-            <font-awesome-icon :icon="toast.icon" size="xl" class="mie8 pbs2"></font-awesome-icon>
-            <div class="flex-fill">{{ toast.message }}</div>
-          </div>
+      <Toast :type="toast.type" class="alert" :class="toastClass({type : toast.type})">
+        <div class="toast-body">
+          <h5 class="toast-title">{{ toast.title }}</h5>
+          <div class="toast-message">{{ toast.message }}</div>
         </div>
+        <Close @click="toast.close()" class="cursor-pointer"/>
       </Toast>
       <div class="mbe14"/>
     </template>
   </Toasts>
 
-</template>
 
+
+
+</template>

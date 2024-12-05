@@ -14,3 +14,20 @@ footer {
     text-align: center;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
+/* Add some margin to the title */
+.toast-title {
+    margin-bottom: 8px; /* Space between title and message */
+    font-size: 1.25rem; /* Adjust font size of title for better readability */
+    font-weight: bold; /* Optional: make the title bold */
+}
+
+/* Style for the message text */
+.toast-message {
+    font-size: 1rem; /* Adjust font size for better readability */
+    line-height: 1.5; /* Increase line height for better spacing */
+}
+
+/* Adjust close button positioning (optional) */
+.toast-message + .cursor-pointer {
+    margin-left: 10px; /* Add space between message and close button */
+}

@@ -38,7 +38,7 @@
               </button>
 
               <!-- Trash icon button -->
-              <button class="btn btn-link p-0" @click="deleteAssignee(assignee.id)"
+              <button class="btn btn-link p-0" @click="deleteAssignee(assignee)"
                       style="font-size: 24px; color: #dc3545; border: none; background: transparent; cursor: pointer;">
                 <i class="fas fa-trash-alt"></i>
               </button>
@@ -141,7 +141,7 @@ import { ref, onMounted } from 'vue';
 import ModalComponent from "../components/ModalComponent.vue";
 import apiClient from "../lib/apiClient.ts";
 import {createToast, AppToast} from "../ts/toasts";
-import {faCheck, faXmark} from "@fortawesome/free-solid-svg-icons";
+import {faCheck, faInfo, faXmark} from "@fortawesome/free-solid-svg-icons";
 
 
 export default {
@@ -178,6 +178,13 @@ export default {
       try {
         await apiClient.post('assignees', newAssignee.value);
         fetchAssignees();  // Reload assignees list
+        createToast({
+          title: "Successfully created Assignee",  // Toast title
+          message: "You have uploaded an assignee in the db!",  // The concatenated error messages,
+          icon: faCheck,
+          type: "success",  // Toast type (error)
+          timeout: 5,  // Duration for the toast in seconds
+        });
         isCreateModalVisible.value = false;  // Close modal
       } catch (error) {
         isCreateModalVisible.value = false;  // Close modal
@@ -207,6 +214,13 @@ export default {
       try {
         await apiClient.put(`assignees/${editAssignee.value.id}`, editAssignee.value);
         fetchAssignees();  // Reload assignees list
+        createToast({
+          title: "Successfully updated Assignee !",  // Toast title
+          message: "The chosen Assignee was successfully updated !",  // The concatenated error messages,
+          icon: faCheck,
+          type: "success",  // Toast type (error)
+          timeout: 5,  // Duration for the toast in seconds
+        });
         isEditModalVisible.value = false;  // Close modal
       } catch (error) {
         isEditModalVisible.value = false;  // Close modal
@@ -222,9 +236,16 @@ export default {
 
 
 
-    const deleteAssignee = async (id) => {
+    const deleteAssignee = async (assignee) => {
       try {
-        await apiClient.delete(`assignees/${id}`);
+        await apiClient.delete(`assignees/${assignee.id}`);
+        createToast({
+          title: "Successfully deleted Assignee",  // Toast title
+          message: "Assignee -  " + assignee.prename + assignee.name + " - was successfully deleted !",  // The concatenated error messages,
+          icon: faCheck,
+          type: "success",  // Toast type (error)
+          timeout: 5,  // Duration for the toast in seconds
+        });
         fetchAssignees();  // Reload assignees list after deletion
       } catch (error) {
         createToast({
